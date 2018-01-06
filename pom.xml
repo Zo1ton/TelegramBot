@@ -6,7 +6,7 @@
 
     <groupId>ru.rnd.vdovin</groupId>
     <artifactId>telegram-bot</artifactId>
-    <version>0.0.0.0001</version>
+    <version>0.0.0.0002</version>
 
     <dependencies>
         <dependency>

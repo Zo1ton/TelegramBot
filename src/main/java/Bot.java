@@ -23,7 +23,11 @@ public class Bot extends TelegramLongPollingBot {
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            sendMsg(message, "Its work!!!");
+            switch (message.getText()) {
+                case "/help" : sendMsg(message, "Бог в помощь!");
+                break;
+                default: sendMsg(message, "Its work!!!");
+            }
         } else {
             System.out.println("ERROR");
         }
