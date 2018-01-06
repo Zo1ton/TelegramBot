@@ -1,0 +1,17 @@
+# iml files
+*.iml
+
+## File-based project format
+*.ipr
+*.iws
+*.ids
+
+# idea
+.idea/
+
+# target
+target/
+temp.out
+
+# exe
+#*.exe
