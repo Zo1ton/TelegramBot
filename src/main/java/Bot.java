@@ -1,3 +1,4 @@
+import org.apache.log4j.Logger;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
@@ -6,9 +7,17 @@ import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+/**
+ * @author Andrey Vdovin
+ * @version 0.0.0.0001
+ */
 public class Bot extends TelegramLongPollingBot {
 
+    private static final Logger LOG = Logger.getLogger(Bot.class);
+    private long count = 0;
+
     public static void main(String[] args) {
+
         ApiContextInitializer.init();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
 
@@ -20,6 +29,10 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public void onUpdateReceived(Update update) {
+
+//        LOG.info("Запрос № " + count++);
+
+        System.out.println("================"+ count++);
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
