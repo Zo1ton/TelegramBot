@@ -6,7 +6,7 @@
 
     <groupId>ru.rnd.vdovin</groupId>
     <artifactId>telegram-bot</artifactId>
-    <version>0.0.0.0006</version>
+    <version>0.0.0.0007</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>

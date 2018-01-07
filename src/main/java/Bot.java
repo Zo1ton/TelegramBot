@@ -20,7 +20,6 @@ public class Bot extends TelegramLongPollingBot {
 
     private static final Logger LOG = Logger.getLogger(Bot.class);
     private long count = 0;
-//    private Map<Integer, Player> playerList = new HashMap<>();
     private Map<Integer, Player> playerList = start();
 
     public static void main(String[] args) {
