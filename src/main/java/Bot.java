@@ -8,6 +8,7 @@ import org.telegram.telegrambots.api.objects.User;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,10 +20,10 @@ public class Bot extends TelegramLongPollingBot {
 
     private static final Logger LOG = Logger.getLogger(Bot.class);
     private long count = 0;
-    private Map<Integer, Player> playerList = new HashMap<>();
+//    private Map<Integer, Player> playerList = new HashMap<>();
+    private Map<Integer, Player> playerList = start();
 
     public static void main(String[] args) {
-
         LOG.info("Bot is ready!");
 
         ApiContextInitializer.init();
@@ -36,11 +37,13 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public void onUpdateReceived(Update update) {
-
         LOG.info("Запрос № " + ++count);
 
         Message message = update.getMessage();
-        if (message != null && message.hasText()) {
+        String name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
+        LOG.info("User id=" + message.getChat().getId() + " " + name);
+        if (/*message != null && */message.hasText()) {
+            LOG.info("Command - " + message.getText());
             switch (message.getText()) {
                 case "/start":
                     sendMsg(message, Tunes.startMsg.getTune());
@@ -49,7 +52,6 @@ public class Bot extends TelegramLongPollingBot {
                     sendMsg(message, "Бог в помощь!");
                     break;
                 case "/hello":
-                    String name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
                     sendMsg(message, "Привет " + name + "!");
                     break;
                 case "/yes":
@@ -63,27 +65,30 @@ public class Bot extends TelegramLongPollingBot {
                 case "/statistics":
                     sendMsg(message, viewStatistic());
                     break;
+                case "/clearAllData":
+                    newGame();
+                    break;
                 default:
                     sendMsg(message, "Нет такой команды!");
-                    sendMsg(message, "id - " + message.getFrom().toString());
-                    LOG.info(message.getChat().getFirstName() + " " + message.getChat().getLastName());
             }
         } else {
-            System.out.println("ERROR");
+            sendMsg(message, "Пока что работает только с текстом!");
         }
     }
 
     private String viewStatistic() {
         StringBuilder yes = new StringBuilder();
         StringBuilder no = new StringBuilder();
+        long x = 0;
         for (Player player : playerList.values()) {
             if (player.isPlay()) {
                 yes.append(player.getFullName()).append("\n");
+                x++;
             } else {
                 no.append(player.getFullName()).append("\n");
             }
         }
-        return "Идут:\n" + yes + "\nНе идут:\n" + no;
+        return "Идут(" + x + "):\n" + yes + "\nНе идут(" + (playerList.size() - x) + "):\n" + no;
     }
 
     private void vote(User user, boolean isPlay) {
@@ -100,6 +105,18 @@ public class Bot extends TelegramLongPollingBot {
         player.setSecondName(user.getLastName());
         player.setPlay(isPlay);
         playerList.put(user.getId(), player);
+
+        try (FileOutputStream fos = new FileOutputStream(Tunes.dbFile.getTune());
+             ObjectOutputStream out = new ObjectOutputStream(fos)) {
+            out.writeObject(playerList);
+        } catch (IOException io) {
+            LOG.error("IOException при попытке прочитать\\найти " + Tunes.dbFile.getTune() + " файл");
+            io.printStackTrace();
+        }
+    }
+
+    private void newGame() {
+        playerList = new HashMap<>();
     }
 
     private void sendMsg(Message message, String s) {
@@ -110,6 +127,24 @@ public class Bot extends TelegramLongPollingBot {
             sendMessage(sendMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
+        }
+    }
+
+    private Map<Integer, Player> start() {
+        File file = new File(Tunes.dbFile.getTune());
+        if (file.exists()) {
+            try (FileInputStream fis = new FileInputStream(Tunes.dbFile.getTune());
+                 ObjectInputStream in = new ObjectInputStream(fis)) {
+                return playerList = (Map) in.readObject();
+            } catch (IOException io) {
+                io.printStackTrace();
+                return playerList = new HashMap<>();
+            } catch (ClassNotFoundException cnfe) {
+                LOG.error("ClassNotFoundException\n" + cnfe);
+                return playerList = new HashMap<>();
+            }
+        } else {
+            return playerList = new HashMap<>();
         }
     }
 
