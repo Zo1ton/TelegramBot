@@ -4,8 +4,12 @@ import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
+import org.telegram.telegrambots.api.objects.User;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Andrey Vdovin
@@ -15,8 +19,11 @@ public class Bot extends TelegramLongPollingBot {
 
     private static final Logger LOG = Logger.getLogger(Bot.class);
     private long count = 0;
+    private Map<Integer, Player> playerList = new HashMap();
 
     public static void main(String[] args) {
+
+        LOG.info("Bot is ready!");
 
         ApiContextInitializer.init();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
@@ -30,20 +37,69 @@ public class Bot extends TelegramLongPollingBot {
 
     public void onUpdateReceived(Update update) {
 
-//        LOG.info("Запрос № " + count++);
-
-        System.out.println("================"+ count++);
+        LOG.info("Запрос № " + ++count);
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             switch (message.getText()) {
-                case "/help" : sendMsg(message, "Бог в помощь!");
-                break;
-                default: sendMsg(message, "Its work!!!");
+                case "/start":
+                    sendMsg(message, Tunes.startMsg.getTune());
+                    break;
+                case "/help":
+                    sendMsg(message, "Бог в помощь!");
+                    break;
+                case "/hello":
+                    String name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
+                    sendMsg(message, "Привет " + name + "!");
+                    break;
+                case "/yes":
+                    vote(message.getFrom(), true);
+                    sendMsg(message, "Ты записан! Так держать!");
+                    break;
+                case "/no":
+                    vote(message.getFrom(), false);
+                    sendMsg(message, "Ты отписан! Жаль(");
+                    break;
+                case "/statistics":
+                    sendMsg(message, viewStatistic());
+                    break;
+                default:
+                    sendMsg(message, "Нет такой команды!");
+                    sendMsg(message, "id - " + message.getFrom().toString());
+                    LOG.info(message.getChat().getFirstName() + " " + message.getChat().getLastName());
             }
         } else {
             System.out.println("ERROR");
         }
+    }
+
+    private String viewStatistic() {
+        String yes = "";
+        String no = "";
+        for (Player player : playerList.values()) {
+            if (player.isPlay()) {
+                yes += (player.getFullName() + "\n");
+            } else {
+                no += (player.getFullName() + "\n");
+            }
+        }
+        return "Идут:\n" + yes + "\nНе идут:\n" + no;
+    }
+
+    private void vote(User user, boolean isPlay) {
+        if (playerList.containsKey(user.getId())) {
+            playerList.remove(user.getId());
+        }
+        addPlayerToMap(user, isPlay);
+    }
+
+    private void addPlayerToMap(User user, boolean isPlay) {
+        Player player = new Player();
+        player.setId(user.getId());
+        player.setFirstName(user.getFirstName());
+        player.setSecondName(user.getLastName());
+        player.setPlay(isPlay);
+        playerList.put(user.getId(), player);
     }
 
     private void sendMsg(Message message, String s) {
