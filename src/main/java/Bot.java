@@ -19,7 +19,7 @@ public class Bot extends TelegramLongPollingBot {
 
     private static final Logger LOG = Logger.getLogger(Bot.class);
     private long count = 0;
-    private Map<Integer, Player> playerList = new HashMap();
+    private Map<Integer, Player> playerList = new HashMap<>();
 
     public static void main(String[] args) {
 
@@ -74,13 +74,13 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private String viewStatistic() {
-        String yes = "";
-        String no = "";
+        StringBuilder yes = new StringBuilder();
+        StringBuilder no = new StringBuilder();
         for (Player player : playerList.values()) {
             if (player.isPlay()) {
-                yes += (player.getFullName() + "\n");
+                yes.append(player.getFullName()).append("\n");
             } else {
-                no += (player.getFullName() + "\n");
+                no.append(player.getFullName()).append("\n");
             }
         }
         return "Идут:\n" + yes + "\nНе идут:\n" + no;
