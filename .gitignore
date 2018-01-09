@@ -15,3 +15,6 @@ temp.out
 
 # exe
 #*.exe
+
+# log
+*.log

@@ -71,6 +71,7 @@ public class Bot extends TelegramLongPollingBot {
                     sendMsg(message, "Нет такой команды!");
             }
         } else {
+            LOG.info("Нет текст");
             sendMsg(message, "Пока что работает только с текстом!");
         }
     }
