@@ -5,11 +5,15 @@ import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.api.objects.User;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import java.io.*;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,40 +43,59 @@ public class Bot extends TelegramLongPollingBot {
         LOG.info("Запрос № " + ++count);
 
         Message message = update.getMessage();
+//        SendMessage message1 = new SendMessage().setChatId(message.getChatId()).setText("4");
         String name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
         LOG.info("User id=" + message.getChat().getId() + " " + name);
         if (/*message != null && */message.hasText()) {
             LOG.info("Command - " + message.getText());
-            switch (message.getText()) {
-                case "/start":
-                    sendMsg(message, Tunes.startMsg.getTune());
-                    break;
-                case "/help":
-                    sendMsg(message, "Бог в помощь!");
-                    break;
-                case "/hello":
-                    sendMsg(message, "Привет " + name + "!");
-                    break;
-                case "/yes":
-                    vote(message.getFrom(), true);
-                    sendMsg(message, "Ты записан! Так держать!");
-                    break;
-                case "/no":
-                    vote(message.getFrom(), false);
-                    sendMsg(message, "Ты отписан! Жаль(");
-                    break;
-                case "/statistics":
-                    sendMsg(message, viewStatistic());
-                    break;
-                case "/clearAllData":
-                    newGame();
-                    break;
-                default:
-                    sendMsg(message, "Нет такой команды!");
+            if (message.getText().equals("/start")) {
+                sendMsg(message, Tunes.startMsg.getTune());
+            } else if (message.getText().equals("/help")) {
+                sendMsg(message, "Бог в помощь!");
+            } else if (message.getText().equals("/hello")) {
+                sendMsg(message, "Привет " + name + "!");
+            } else if (message.getText().equals("/yes") || message.getText().equals("Иду")) {
+                vote(message.getFrom(), true);
+                sendMsg(message, "Ты записан! Так держать!");
+            } else if (message.getText().equals("/no") || message.getText().equals("Не иду")) {
+                vote(message.getFrom(), false);
+                sendMsg(message, "Ты отписан! Жаль(");
+            } else if (message.getText().equals("/statistics") || message.getText().equals("Статистика")) {
+                sendMsg(message, viewStatistic());
+            } else if (message.getText().equals("/clearAllData")) {
+                newGame();
+            /*} else if (message.getText().equals("/keyboard")) {
+                showKeyboard(message1);*/
+            } else {
+                sendMsg(message, "Нет такой команды!");
             }
         } else {
             LOG.info("Нет текст");
             sendMsg(message, "Пока что работает только с текстом!");
+        }
+        showKeyboard();
+    }
+
+    private void showKeyboard() {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("Иду");
+        row.add("Не иду");
+        keyboard.add(row);
+
+        row = new KeyboardRow();
+        row.add("Статистика");
+        keyboard.add(row);
+
+        keyboardMarkup.setKeyboard(keyboard);
+        SendMessage message1 = new SendMessage();
+        message1.setReplyMarkup(keyboardMarkup);
+        try {
+            sendMessage(message1); // Sending our message object to user
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
@@ -116,7 +139,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void newGame() {
-        playerList = new HashMap<>();
+        playerList = new LinkedHashMap<>();
     }
 
     private void sendMsg(Message message, String s) {
@@ -134,17 +157,17 @@ public class Bot extends TelegramLongPollingBot {
         File file = new File(Tunes.dbFile.getTune());
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(Tunes.dbFile.getTune());
-                 ObjectInputStream in = new ObjectInputStream(fis)) {
-                return playerList = (Map) in.readObject();
+                ObjectInputStream in = new ObjectInputStream(fis)) {
+                return playerList = (Map<Integer, Player>) in.readObject();
             } catch (IOException io) {
                 io.printStackTrace();
-                return playerList = new HashMap<>();
+                return playerList = new LinkedHashMap<>();
             } catch (ClassNotFoundException cnfe) {
                 LOG.error("ClassNotFoundException\n" + cnfe);
-                return playerList = new HashMap<>();
+                return playerList = new LinkedHashMap<>();
             }
         } else {
-            return playerList = new HashMap<>();
+            return playerList = new LinkedHashMap<>();
         }
     }
 
