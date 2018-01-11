@@ -73,10 +73,10 @@ public class Bot extends TelegramLongPollingBot {
             LOG.info("Нет текст");
             sendMsg(message, "Пока что работает только с текстом!");
         }
-        showKeyboard();
+        showKeyboard(message.getChatId());
     }
 
-    private void showKeyboard() {
+    private void showKeyboard(Long chat_id) {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
 
@@ -91,7 +91,7 @@ public class Bot extends TelegramLongPollingBot {
 
         keyboardMarkup.setKeyboard(keyboard);
         SendMessage message1 = new SendMessage();
-        message1.setReplyMarkup(keyboardMarkup);
+        message1.setReplyMarkup(keyboardMarkup).setChatId(chat_id);
         try {
             sendMessage(message1); // Sending our message object to user
         } catch (TelegramApiException e) {
