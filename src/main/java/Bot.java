@@ -43,7 +43,6 @@ public class Bot extends TelegramLongPollingBot {
         LOG.info("Запрос № " + ++count);
 
         Message message = update.getMessage();
-//        SendMessage message1 = new SendMessage().setChatId(message.getChatId()).setText("4");
         String name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
         LOG.info("User id=" + message.getChat().getId() + " " + name);
         if (/*message != null && */message.hasText()) {
@@ -91,7 +90,7 @@ public class Bot extends TelegramLongPollingBot {
 
         keyboardMarkup.setKeyboard(keyboard);
         SendMessage message1 = new SendMessage();
-        message1.setReplyMarkup(keyboardMarkup).setChatId(chat_id);
+        message1.setReplyMarkup(keyboardMarkup).setChatId(chat_id).setText("_");
         try {
             sendMessage(message1); // Sending our message object to user
         } catch (TelegramApiException e) {

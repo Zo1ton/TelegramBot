@@ -1,0 +1,1 @@
+https://monsterdeveloper.gitbooks.io/writing-telegram-bots-on-java/content/lesson-2.-photobot.html
