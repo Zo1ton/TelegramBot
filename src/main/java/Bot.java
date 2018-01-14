@@ -72,30 +72,6 @@ public class Bot extends TelegramLongPollingBot {
             LOG.info("Нет текст");
             sendMsg(message, "Пока что работает только с текстом!");
         }
-        showKeyboard(message.getChatId());
-    }
-
-    private void showKeyboard(Long chat_id) {
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        List<KeyboardRow> keyboard = new ArrayList<>();
-
-        KeyboardRow row = new KeyboardRow();
-        row.add("Иду");
-        row.add("Не иду");
-        keyboard.add(row);
-
-        row = new KeyboardRow();
-        row.add("Статистика");
-        keyboard.add(row);
-
-        keyboardMarkup.setKeyboard(keyboard);
-        SendMessage message1 = new SendMessage();
-        message1.setReplyMarkup(keyboardMarkup).setChatId(chat_id).setText("_");
-        try {
-            sendMessage(message1); // Sending our message object to user
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
     }
 
     private String viewStatistic() {
@@ -142,9 +118,23 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void sendMsg(Message message, String s) {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("Иду");
+        row.add("Не иду");
+        keyboard.add(row);
+
+        row = new KeyboardRow();
+        row.add("Статистика");
+        keyboard.add(row);
+
+        keyboardMarkup.setKeyboard(keyboard);
+
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText(s);
+        sendMessage.setReplyMarkup(keyboardMarkup).setText(s);
         try {
             sendMessage(sendMessage);
         } catch (TelegramApiException e) {
