@@ -1,14 +1,13 @@
 import org.apache.log4j.Logger;
-import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.TelegramBotsApi;
-import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.objects.Message;
-import org.telegram.telegrambots.api.objects.Update;
-import org.telegram.telegrambots.api.objects.User;
-import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
+
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -26,51 +25,33 @@ public class Bot extends TelegramLongPollingBot {
     private long count = 0;
     private Map<Integer, Player> playerList = start();
 
-    public static void main(String[] args) {
-        LOG.info("Bot is ready!");
-
-        ApiContextInitializer.init();
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-
-        try {
-            telegramBotsApi.registerBot(new Bot());
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void onUpdateReceived(Update update) {
         LOG.info("Запрос № " + ++count);
 
         Message message = update.getMessage();
         String name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
+        String chatId = message.getChatId().toString();
         LOG.info("User id=" + message.getChat().getId() + " " + name);
-        if (/*message != null && */message.hasText()) {
+        if (message.hasText()) {
             LOG.info("Command - " + message.getText());
             if (message.getText().equals("/start")) {
-                sendMsg(message, Tunes.startMsg.getTune());
-            } else if (message.getText().equals("/help")) {
-                sendMsg(message, "Бог в помощь!");
-            } else if (message.getText().equals("/hello")) {
-                sendMsg(message, "Привет " + name + "!");
-            } else if (message.getText().equals("/yes") || message.getText().equals("Иду")) {
+                sendMsg(chatId, Tunes.startMsg.getTune());
+            } else if (message.getText().equals("Иду")) {
                 vote(message.getFrom(), true);
-                sendMsg(message, "Ты записан! Так держать!");
-            } else if (message.getText().equals("/no") || message.getText().equals("Не иду")) {
+                sendMsg(chatId, "Ты записан! Так держать!");
+            } else if (message.getText().equals("Не иду")) {
                 vote(message.getFrom(), false);
-                sendMsg(message, "Ты отписан! Жаль(");
-            } else if (message.getText().equals("/statistics") || message.getText().equals("Статистика")) {
-                sendMsg(message, viewStatistic());
+                sendMsg(chatId, "Ты отписан! Жаль(");
+            } else if (message.getText().equals("Статистика")) {
+                sendMsg(chatId, viewStatistic());
             } else if (message.getText().equals("/clearAllData")) {
                 newGame();
-            /*} else if (message.getText().equals("/keyboard")) {
-                showKeyboard(message1);*/
             } else {
-                sendMsg(message, "Нет такой команды!");
+                sendMsg(chatId, "Нет такой команды!");
             }
         } else {
             LOG.info("Нет текст");
-            sendMsg(message, "Пока что работает только с текстом!");
+            sendMsg(chatId, "Пока что работает только с текстом!");
         }
     }
 
@@ -86,7 +67,10 @@ public class Bot extends TelegramLongPollingBot {
                 no.append(player.getFullName()).append("\n");
             }
         }
-        return "Идут(" + x + "):\n" + yes + "\nНе идут(" + (playerList.size() - x) + "):\n" + no;
+        return String.format("Идут(%d):\n" +
+                "%s\n" +
+                "Не идут(%d):\n" +
+                "%s", x, yes, (playerList.size() - x), no);
     }
 
     private void vote(User user, boolean isPlay) {
@@ -117,7 +101,7 @@ public class Bot extends TelegramLongPollingBot {
         playerList = new LinkedHashMap<>();
     }
 
-    private void sendMsg(Message message, String s) {
+    private void sendMsg(String chatId, String messageText) {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboard = new ArrayList<>();
 
@@ -133,10 +117,10 @@ public class Bot extends TelegramLongPollingBot {
         keyboardMarkup.setKeyboard(keyboard);
 
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setReplyMarkup(keyboardMarkup).setText(s);
+        sendMessage.setChatId(chatId);
+        sendMessage.setReplyMarkup(keyboardMarkup).setText(messageText);
         try {
-            sendMessage(sendMessage);
+            execute(sendMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -146,7 +130,7 @@ public class Bot extends TelegramLongPollingBot {
         File file = new File(Tunes.dbFile.getTune());
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(Tunes.dbFile.getTune());
-                ObjectInputStream in = new ObjectInputStream(fis)) {
+                 ObjectInputStream in = new ObjectInputStream(fis)) {
                 return playerList = (Map<Integer, Player>) in.readObject();
             } catch (IOException io) {
                 io.printStackTrace();

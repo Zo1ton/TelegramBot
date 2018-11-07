@@ -7,6 +7,7 @@ public class Player implements Serializable{
     private String secondName;
     private boolean isPlay;
 
+    //default constructor
     public Player() {
     }
 
